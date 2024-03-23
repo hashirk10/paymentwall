@@ -2,10 +2,13 @@ const http = require('http');
 const url = require('url');
 const querystring = require('querystring');
 const Paymentwall = require('paymentwall');
-const APP_KEY = '769e42c1ad1be421ccad03967b4ca865';
-const SECRET_KEY = 'f691e3ccf8713ee0f248bf914ff7f7a0';
-
 require('dotenv').config()
+
+const APP_KEY = process.env.APP_KEY;
+const SECRET_KEY = process.env.SECRET_KEY;
+
+console.log(APP_KEY)
+
 
 const server = http.createServer((req, res) => {
     console.log("request received")
