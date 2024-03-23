@@ -2,9 +2,10 @@ const http = require('http');
 const url = require('url');
 const querystring = require('querystring');
 const Paymentwall = require('paymentwall');
-
 const APP_KEY = '769e42c1ad1be421ccad03967b4ca865';
 const SECRET_KEY = 'f691e3ccf8713ee0f248bf914ff7f7a0';
+
+require('dotenv').config()
 
 const server = http.createServer((req, res) => {
     console.log("request received")
@@ -32,7 +33,10 @@ const server = http.createServer((req, res) => {
     res.end('Ok')
 });
 
-const PORT = 3000;
-server.listen(PORT, () => {
+// const PORT = 3000;
+// Use PORT provided in environment or default to 3000
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT,"0.0.0.0", () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
