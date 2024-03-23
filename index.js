@@ -7,7 +7,7 @@ require('dotenv').config()
 const APP_KEY = process.env.APP_KEY;
 const SECRET_KEY = process.env.SECRET_KEY;
 
-console.log(APP_KEY)
+
 
 
 const server = http.createServer((req, res) => {
