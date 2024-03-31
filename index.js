@@ -1,13 +1,13 @@
 const http = require('http');
 const url = require('url');
 const querystring = require('querystring');
-var Paymentwall = require('paymentwall');
+const Paymentwall = require('paymentwall');
 
-// Initialize Paymentwall with your project keys
+// Configure Paymentwall with your project keys
 Paymentwall.Configure(
-    Paymentwall.Base.API_GOODS,
-    '769e42c1ad1be421ccad03967b4ca865',
-    'f691e3ccf8713ee0f248bf914ff7f7a0'
+  Paymentwall.Base.API_GOODS,
+  '769e42c1ad1be421ccad03967b4ca865', // Replace with your actual app key
+  'f691e3ccf8713ee0f248bf914ff7f7a0'  // Replace with your actual secret key
 );
 
 require('dotenv').config();
@@ -30,11 +30,36 @@ const server = http.createServer((req, res) => {
         const parsedUrl = url.parse(req.url);
         const queryParams = querystring.parse(parsedUrl.query);
 
-        // Handling for specific paths
         if (queryParams.notification_type && queryParams.notification_type === 'pingback') {
-            // Existing pingback handling logic
+            const pingback = new Paymentwall.Pingback(queryParams, req.connection.remoteAddress);
+            if (pingback.validate()) {
+                const productId = pingback.getProduct().getId();
+                if (pingback.isDeliverable()) {
+                    // deliver the product
+                    paymentSuccessStates[queryParams.userId] = true;
+                    res.writeHead(200, {'Content-Type': 'text/plain'});
+                    res.end('OK');
+                } else if (pingback.isCancelable()) {
+                    // withdraw the product
+                    paymentSuccessStates[queryParams.userId] = false;
+                    res.writeHead(200, {'Content-Type': 'text/plain'});
+                    res.end('OK');
+                }
+            } else {
+                console.log(pingback.getErrorSummary());
+                res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end('NOK');
+            }
         } else if (parsedUrl.pathname === '/check-payment') {
-            // Existing /check-payment handling logic
+            const userId = queryParams.userId;
+            const paymentSuccess = paymentSuccessStates[userId];
+            if (paymentSuccess) {
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({ success: true }));
+            } else {
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({ success: false }));
+            }
         } else {
             // Default response for any other request
             res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -58,5 +83,4 @@ server.listen(PORT, "0.0.0.0", () => {
 // Global uncaught exception handler
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    // Optionally, perform cleanup or restart actions here
 });
