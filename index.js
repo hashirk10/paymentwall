@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
         const userId = queryParams['userId'];
         
         // Check payment status based on pingback validation
-        const isPaymentSuccessful = paymentSuccessStates.hasOwnProperty(userId) && paymentSuccessStates[userId];
+        const isPaymentSuccessful = paymentSuccessStates.hasOwnProperty(userId) || paymentSuccessStates[userId];
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: isPaymentSuccessful }));
     } 
