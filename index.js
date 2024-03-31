@@ -1,40 +1,54 @@
 const http = require('http');
 const url = require('url');
 const querystring = require('querystring');
-const Paymentwall = require('paymentwall');
 
-// Assume Paymentwall is correctly initialized as per their documentation
+// Mock Paymentwall configuration for demonstration purposes
+const Paymentwall = {
+    Configure: function(apiType, appKey, secretKey) {
+        // Placeholder for Paymentwall configuration logic
+    },
+    Base: {
+        API_GOODS: 'API_GOODS' // Placeholder
+    }
+};
+
+// Replace these with your actual Paymentwall project keys
 Paymentwall.Configure(
   Paymentwall.Base.API_GOODS,
-  '769e42c1ad1be421ccad03967b4ca865', // Your actual Paymentwall App Key
-  'f691e3ccf8713ee0f248bf914ff7f7a0'  // Your actual Paymentwall Secret Key
+  '769e42c1ad1be421ccad03967b4ca865',
+  'f691e3ccf8713ee0f248bf914ff7f7a0'
 );
 
 require('dotenv').config();
 
-let paymentSuccessStates = {};
+let isValidPingbackReceived = {};
 
 const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url, true); // True to parse the query as well
+    const parsedUrl = url.parse(req.url, true);
     const queryParams = parsedUrl.query;
     
+    // Handling Paymentwall pingbacks
     if (parsedUrl.pathname === '/pingback') {
-        // Simulate pingback validation logic
-        const isValidPingback = true; // Placeholder; replace with actual validation logic
-        const userId = queryParams['userId']; // Extract userId from pingback data
+        // Example: Validate pingback here according to Paymentwall's guidelines
+        const userId = queryParams['userId']; // Adjust according to how userId is received
+        const isValidPingback = true; // Placeholder for actual validation logic
 
-        // Update payment status based on pingback validation
-        paymentSuccessStates[userId] = isValidPingback;
+        isValidPingbackReceived[userId] = isValidPingback;
+
         res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('OK'); // Acknowledge the pingback
-    } 
+        res.end('OK'); // Respond with 'OK' to acknowledge receipt of the pingback
+    }
+    // Endpoint for clients (Unity) to check payment status
     else if (parsedUrl.pathname === '/check-payment') {
         const userId = queryParams['userId'];
-        
-        // Check payment status based on pingback validation
-        const isPaymentSuccessful = paymentSuccessStates.hasOwnProperty(userId) || paymentSuccessStates[userId];
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: isPaymentSuccessful }));
+
+        if (isValidPingbackReceived.hasOwnProperty(userId) && isValidPingbackReceived[userId]) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false }));
+        }
     } 
     else {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
