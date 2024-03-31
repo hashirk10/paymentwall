@@ -11,62 +11,47 @@ Paymentwall.Configure(
 );
 
 require('dotenv').config();
+
 let paymentSuccessStates = {};
 
 const server = http.createServer((req, res) => {
-    try {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-
-        if (req.method === 'OPTIONS') {
-            res.writeHead(204);
-            res.end();
-            return;
-        }
-
-        const parsedUrl = url.parse(req.url);
-        const queryParams = querystring.parse(parsedUrl.query);
-
-        if (parsedUrl.pathname === '/pingback') {
-            // Placeholder for pingback validation logic
-            const isValidPingback = true; // This should be replaced with actual validation logic
-            const userId = queryParams.userId; // Extract userId appropriately based on pingback data
-
-            if (isValidPingback) {
-                paymentSuccessStates[userId] = true;
-                res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.end('OK');
-            } else {
-                paymentSuccessStates[userId] = false;
-                res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.end('NOK');
-            }
-        } else if (parsedUrl.pathname === '/check-payment') {
-            const userId = queryParams.userId;
-            const isSuccess = paymentSuccessStates[userId];
-
-            if (isSuccess) {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true }));
-            } else {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false }));
-            }
-        } else {
+    const parsedUrl = url.parse(req.url);
+    const queryParams = querystring.parse(parsedUrl.query);
+    
+    // Dedicated endpoint for handling Paymentwall pingbacks
+    if (parsedUrl.pathname === '/pingback') {
+        const isValidPingback = true; // Implement actual validation logic here
+        const userId = queryParams['userId']; // Adjust based on how userId is passed in the pingback
+        
+        if (isValidPingback) {
+            paymentSuccessStates[userId] = true;
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('OK');
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('NOK');
         }
-    } catch (error) {
-        console.error("Server error:", error);
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Internal Server Error');
+    } 
+    // Endpoint for clients to check payment status
+    else if (parsedUrl.pathname === '/check-payment') {
+        const userId = queryParams['userId'];
+        
+        if (paymentSuccessStates[userId]) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false }));
+        }
+    } 
+    // Fallback for any other access, indicating the service is running
+    else {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Service Running');
     }
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
-}).on('error', (err) => {
-    console.error('Server failed to start:', err);
 });
