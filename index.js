@@ -11,20 +11,6 @@ Paymentwall.Configure(
 );
 
 require('dotenv').config();
-const http = require('http');
-const url = require('url');
-const querystring = require('querystring');
-require('dotenv').config(); // Ensure your .env file or environment variables are set up
-
-// Simulated Paymentwall library setup
-// Make sure to replace this with the actual Paymentwall library initialization based on the official documentation
-const Paymentwall = require('paymentwall');
-Paymentwall.Configure(
-    Paymentwall.Base.API_GOODS,
-    process.env.PW_APP_KEY, // 'YOUR_APP_KEY'
-    process.env.PW_SECRET_KEY // 'YOUR_SECRET_KEY'
-);
-
 let paymentSuccessStates = {}; // In-memory storage for demo purposes
 
 const server = http.createServer((req, res) => {
