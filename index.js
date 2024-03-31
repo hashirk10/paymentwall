@@ -11,12 +11,25 @@ Paymentwall.Configure(
 );
 
 require('dotenv').config();
+const http = require('http');
+const url = require('url');
+const querystring = require('querystring');
+require('dotenv').config(); // Ensure your .env file or environment variables are set up
 
-let paymentSuccessStates = {};
+// Simulated Paymentwall library setup
+// Make sure to replace this with the actual Paymentwall library initialization based on the official documentation
+const Paymentwall = require('paymentwall');
+Paymentwall.Configure(
+    Paymentwall.Base.API_GOODS,
+    process.env.PW_APP_KEY, // 'YOUR_APP_KEY'
+    process.env.PW_SECRET_KEY // 'YOUR_SECRET_KEY'
+);
+
+let paymentSuccessStates = {}; // In-memory storage for demo purposes
 
 const server = http.createServer((req, res) => {
     try {
-        // Set CORS headers
+        // Basic CORS setup; adjust as necessary
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -27,60 +40,44 @@ const server = http.createServer((req, res) => {
             return;
         }
 
-        const parsedUrl = url.parse(req.url);
-        const queryParams = querystring.parse(parsedUrl.query);
+        const parsedUrl = url.parse(req.url, true); // `true` to parse query string
+        const queryParams = parsedUrl.query;
 
-        if (queryParams.notification_type && queryParams.notification_type === 'pingback') {
-            const pingback = new Paymentwall.Pingback(queryParams, req.connection.remoteAddress);
-            if (pingback.validate()) {
-                const productId = pingback.getProduct().getId();
-                if (pingback.isDeliverable()) {
-                    // deliver the product
-                    paymentSuccessStates[queryParams.userId] = true;
-                    res.writeHead(200, {'Content-Type': 'text/plain'});
-                    res.end('OK');
-                } else if (pingback.isCancelable()) {
-                    // withdraw the product
-                    paymentSuccessStates[queryParams.userId] = false;
-                    res.writeHead(200, {'Content-Type': 'text/plain'});
-                    res.end('OK');
-                }
+        // Handling pingback for payment validation
+        if (parsedUrl.pathname === '/pingback') {
+            // Insert your logic to validate pingback with Paymentwall
+            // This is a placeholder logic, adjust according to actual Paymentwall pingback documentation
+            if (queryParams.notification_type === 'pingback') {
+                const userId = queryParams.uid; // Ensure correct parameter name as per Paymentwall documentation
+                paymentSuccessStates[userId] = true; // Simulate successful payment validation
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end('OK');
             } else {
-                console.log(pingback.getErrorSummary());
-                res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
                 res.end('NOK');
             }
-        } else if (parsedUrl.pathname === '/check-payment') {
+        }
+        // Check payment status
+        else if (parsedUrl.pathname === '/check-payment') {
             const userId = queryParams.userId;
-            const paymentSuccess = paymentSuccessStates[userId];
-            if (paymentSuccess) {
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({ success: true }));
-            } else {
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({ success: false }));
-            }
+            const isSuccess = paymentSuccessStates[userId] || false;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: isSuccess }));
         } else {
             // Default response for any other request
-            res.writeHead(200, {'Content-Type': 'text/plain'});
-            res.end('Ok');
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('Service Running');
         }
     } catch (error) {
         console.error("Server error:", error);
-        res.writeHead(500, {'Content-Type': 'text/plain'});
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
         res.end('Internal Server Error');
     }
 });
 
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running at http://localhost:${PORT}`);
 }).on('error', (err) => {
     console.error('Server failed to start:', err);
-});
-
-// Global uncaught exception handler
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
 });
