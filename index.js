@@ -28,17 +28,14 @@ const server = http.createServer((req, res) => {
     const queryParams = parsedUrl.query;
     
     if (parsedUrl.pathname === '/pingback') {
-        const userId = queryParams['userId']; // Extract userId from pingback data
-        // Here you would validate the pingback. For now, we'll simulate it:
-        isValidPingbackReceived[userId] = true; // Simulating a valid pingback
+        // Assume pingback validation happens here
+        paymentAcknowledged = true; // Acknowledge any valid pingback
         res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('OK'); // Acknowledge the pingback
+        res.end('OK'); // Respond to Paymentwall pingback
     } else if (parsedUrl.pathname === '/check-payment') {
-        const userId = queryParams['userId'];
-        // Directly respond based on the pingback status
-        const isSuccess = !!isValidPingbackReceived[userId];
+        // The response is solely based on whether any pingback was acknowledged
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: isSuccess }));
+        res.end(JSON.stringify({ success: paymentAcknowledged }));
     } else {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end('Service Running');
