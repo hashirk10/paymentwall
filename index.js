@@ -1,3 +1,4 @@
+resolve error if any:
 const http = require('http');
 const url = require('url');
 const querystring = require('querystring');
@@ -27,6 +28,7 @@ const server = http.createServer((req, res) => {
             paymentSuccessStates[userId] = true;
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('OK');
+            res.end(JSON.stringify({ success: true });
         } else {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('NOK');
