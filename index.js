@@ -27,34 +27,24 @@ const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const queryParams = parsedUrl.query;
     
-    // Handling Paymentwall pingbacks
     if (parsedUrl.pathname === '/pingback') {
-        // Example: Validate pingback here according to Paymentwall's guidelines
-        const userId = queryParams['userId']; // Adjust according to how userId is received
-        const isValidPingback = true; // Placeholder for actual validation logic
-
-        isValidPingbackReceived[userId] = isValidPingback;
-
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('OK'); // Respond with 'OK' to acknowledge receipt of the pingback
-    }
-    // Endpoint for clients (Unity) to check payment status
-    else if (parsedUrl.pathname === '/check-payment') {
+        // Validate pingback here and set validity
         const userId = queryParams['userId'];
-
-        if (isValidPingbackReceived.hasOwnProperty(userId) && isValidPingbackReceived[userId]) {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true }));
-        } else {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false }));
-        }
-    } 
-    else {
+        isValidPingbackReceived[userId] = true; // Assume validation passes for demo
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('OK');
+    } else if (parsedUrl.pathname === '/check-payment') {
+        const userId = queryParams['userId'];
+        const isValidPingback = isValidPingbackReceived[userId];
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: !!isValidPingback }));
+    } else {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end('Service Running');
     }
 });
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
