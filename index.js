@@ -52,7 +52,7 @@ const server = http.createServer((req, res) => {
         } else {
             // Default response for any other request
             res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end('Service Running');
+            res.end('OK');
         }
     } catch (error) {
         console.error("Server error:", error);
