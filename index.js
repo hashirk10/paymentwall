@@ -11,11 +11,10 @@ Paymentwall.Configure(
 );
 
 require('dotenv').config();
-let paymentSuccessStates = {}; // In-memory storage for demo purposes
+let paymentSuccessStates = {};
 
 const server = http.createServer((req, res) => {
     try {
-        // Basic CORS setup; adjust as necessary
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -26,31 +25,35 @@ const server = http.createServer((req, res) => {
             return;
         }
 
-        const parsedUrl = url.parse(req.url, true); // `true` to parse query string
-        const queryParams = parsedUrl.query;
+        const parsedUrl = url.parse(req.url);
+        const queryParams = querystring.parse(parsedUrl.query);
 
-        // Handling pingback for payment validation
         if (parsedUrl.pathname === '/pingback') {
-            // Insert your logic to validate pingback with Paymentwall
-            // This is a placeholder logic, adjust according to actual Paymentwall pingback documentation
-            if (queryParams.notification_type === 'pingback') {
-                const userId = queryParams.uid; // Ensure correct parameter name as per Paymentwall documentation
-                paymentSuccessStates[userId] = true; // Simulate successful payment validation
+            // Placeholder for pingback validation logic
+            const isValidPingback = true; // This should be replaced with actual validation logic
+            const userId = queryParams.userId; // Extract userId appropriately based on pingback data
+
+            if (isValidPingback) {
+                paymentSuccessStates[userId] = true;
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end('OK');
             } else {
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                paymentSuccessStates[userId] = false;
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end('NOK');
             }
-        }
-        // Check payment status
-        else if (parsedUrl.pathname === '/check-payment') {
+        } else if (parsedUrl.pathname === '/check-payment') {
             const userId = queryParams.userId;
-            const isSuccess = paymentSuccessStates[userId] || false;
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: isSuccess }));
+            const isSuccess = paymentSuccessStates[userId];
+
+            if (isSuccess) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+            } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false }));
+            }
         } else {
-            // Default response for any other request
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('OK');
         }
