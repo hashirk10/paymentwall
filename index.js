@@ -23,13 +23,6 @@ require('dotenv').config();
 
 let isValidPingbackReceived = {};
 
-// Ensure this part correctly updates the user's payment status
-if (isValidPingback) {
-    paymentSuccessStates[userId] = true;
-    console.log(`Payment success for userId: ${userId}`); // Logging for debugging
-} else {
-    console.log(`Invalid pingback for userId: ${userId}`); // Logging for debugging
-}
 
 
 const server = http.createServer((req, res) => {
