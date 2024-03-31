@@ -1,14 +1,14 @@
 const http = require('http');
 const url = require('url');
 const querystring = require('querystring');
-const Paymentwall = require('paymentwall');
+var Paymentwall = require('paymentwall');
 
 // Initialize Paymentwall with your project keys
-PWBase.SetApiType(PWBase.API_GOODS);
-
-Paymentwall.Base.setAppKey('769e42c1ad1be421ccad03967b4ca865'); // Replace with actual app key
-Paymentwall.Base.setSecretKey('f691e3ccf8713ee0f248bf914ff7f7a0'); // Replace with actual secret key
- // Replace with your actual secret key
+Paymentwall.Configure(
+    Paymentwall.Base.API_GOODS,
+    '769e42c1ad1be421ccad03967b4ca865',
+    'f691e3ccf8713ee0f248bf914ff7f7a0'
+);
 
 require('dotenv').config();
 
